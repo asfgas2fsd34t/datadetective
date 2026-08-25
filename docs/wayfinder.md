@@ -21,6 +21,8 @@ Produce a handoff-ready product specification, technical architecture, and imple
 - The broad claim "ask why a business metric changed" is already occupied, most directly by ThoughtSpot Spotter.
 - DataDetective proceeds only as a benchmark-first experiment for raw exports, focused on explicit falsification, rerunnable evidence, and separating contribution from causality.
 - See [Existing Alternatives to DataDetective](research/existing-alternatives.md).
+- No reviewed public dataset combines rich e-commerce data, permissive commercial reuse, and known root-cause labels. The scored benchmark core must use deterministic synthetic cases with hidden intervention manifests; UCI Online Retail can provide real-data holdouts.
+- See [Benchmark Data and Case Research](research/benchmark-data-and-cases.md).
 - No viability decision has been made yet.
 
 ## Not yet specified
