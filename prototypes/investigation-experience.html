@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DataDetective / Investigation Experience Prototype</title>
+  <style>
+    :root {
+      --ink: #172126;
+      --muted: #68777b;
+      --line: #d8e1dd;
+      --paper: #f6f8f5;
+      --white: #ffffff;
+      --green: #0b6e5b;
+      --green-soft: #dff1e9;
+      --blue: #2563a6;
+      --blue-soft: #e5effa;
+      --amber: #a96712;
+      --amber-soft: #fff0d8;
+      --coral: #b84c43;
+      --coral-soft: #fbe7e4;
+      --shadow: 0 16px 42px rgba(23, 33, 38, 0.08);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--paper); }
+    button { font: inherit; }
+    button:focus-visible { outline: 3px solid #83b9e8; outline-offset: 2px; }
+    .shell { min-height: 100vh; }
+    .topbar {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 20px;
+      justify-content: space-between;
+      padding: 15px clamp(18px, 4vw, 54px);
+      position: sticky;
+      top: 0;
+      z-index: 4;
+    }
+    .brand { align-items: center; display: flex; gap: 11px; }
+    .brand-mark {
+      align-items: center;
+      background: var(--ink);
+      color: #fff;
+      display: grid;
+      font-size: 13px;
+      font-weight: 800;
+      height: 30px;
+      letter-spacing: .08em;
+      place-items: center;
+      width: 30px;
+    }
+    .brand-name { font-size: 13px; font-weight: 800; letter-spacing: .18em; }
+    .top-meta { align-items: center; color: var(--muted); display: flex; font-size: 12px; gap: 12px; }
+    .status-dot { background: var(--green); border-radius: 50%; display: inline-block; height: 7px; width: 7px; }
+    .prototype-stamp { border: 1px solid #e6caa4; color: var(--amber); font-size: 10px; font-weight: 800; letter-spacing: .14em; padding: 6px 8px; }
+    .main { margin: 0 auto; max-width: 1460px; padding: 34px clamp(18px, 4vw, 54px) 120px; }
+    .eyebrow { color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .17em; margin: 0 0 10px; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(26px, 3.4vw, 46px); letter-spacing: -.04em; line-height: 1.04; margin-bottom: 12px; max-width: 780px; }
+    h2 { font-size: 19px; letter-spacing: -.02em; margin-bottom: 10px; }
+    h3 { font-size: 14px; margin-bottom: 7px; }
+    .subline { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 0; max-width: 720px; }
+    .hero-row { align-items: end; display: flex; gap: 24px; justify-content: space-between; margin-bottom: 26px; }
+    .hero-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 9px; justify-content: end; }
+    .btn { align-items: center; border: 1px solid transparent; cursor: pointer; display: inline-flex; font-size: 12px; font-weight: 750; gap: 8px; justify-content: center; min-height: 38px; padding: 0 13px; transition: .15s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--green); color: #fff; }
+    .btn-primary:hover { background: #095947; }
+    .btn-secondary { background: var(--white); border-color: var(--line); color: var(--ink); }
+    .btn-secondary:hover { border-color: #9fb8ae; }
+    .btn-quiet { background: transparent; border-color: transparent; color: var(--muted); padding: 0 6px; }
+    .btn-quiet:hover { color: var(--ink); }
+    .btn[disabled] { cursor: wait; opacity: .6; transform: none; }
+    .metric-strip { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 24px; }
+    .metric-chip { background: var(--white); border: 1px solid var(--line); min-width: 145px; padding: 12px 14px; }
+    .metric-chip small { color: var(--muted); display: block; font-size: 10px; font-weight: 750; letter-spacing: .1em; margin-bottom: 7px; text-transform: uppercase; }
+    .metric-chip strong { display: block; font-size: 21px; letter-spacing: -.04em; }
+    .metric-chip .negative { color: var(--coral); }
+    .metric-chip .positive { color: var(--green); }
+    .metric-chip .neutral { color: var(--blue); }
+    .panel { background: var(--white); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .panel-head { align-items: baseline; border-bottom: 1px solid var(--line); display: flex; gap: 10px; justify-content: space-between; padding: 16px 18px; }
+    .panel-head h2, .panel-head h3 { margin: 0; }
+    .panel-note { color: var(--muted); font-size: 11px; }
+    .panel-body { padding: 17px 18px; }
+    .tag { align-items: center; display: inline-flex; font-size: 10px; font-weight: 800; gap: 5px; letter-spacing: .08em; padding: 5px 7px; text-transform: uppercase; }
+    .tag-green { background: var(--green-soft); color: var(--green); }
+    .tag-blue { background: var(--blue-soft); color: var(--blue); }
+    .tag-amber { background: var(--amber-soft); color: var(--amber); }
+    .tag-coral { background: var(--coral-soft); color: var(--coral); }
+    .muted { color: var(--muted); }
+    .tiny { color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .mono { font-family: "SFMono-Regular", Consolas, monospace; }
+    .state-line { align-items: center; background: #eef5f1; border-left: 3px solid var(--green); color: #315b4f; display: flex; font-size: 12px; gap: 8px; margin-bottom: 20px; padding: 10px 13px; }
+    .state-line.running { background: var(--amber-soft); border-color: var(--amber); color: #765015; }
+    .state-line.complete { background: var(--green-soft); }
+    .layout-a { display: grid; gap: 15px; grid-template-columns: 270px minmax(360px, 1fr) 330px; }
+    .hypothesis-list { display: grid; gap: 7px; padding: 12px; }
+    .hypothesis-item { background: #fbfcfb; border: 1px solid transparent; cursor: pointer; padding: 13px 12px; text-align: left; width: 100%; }
+    .hypothesis-item:hover { border-color: #afc8bd; }
+    .hypothesis-item.selected { background: #eef8f3; border-color: #7bb29e; }
+    .hypothesis-item .item-top { align-items: center; display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .hypothesis-id { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+    .hypothesis-item strong { display: block; font-size: 13px; line-height: 1.35; }
+    .hypothesis-item p { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 7px 0 0; }
+    .evidence-stack { display: grid; gap: 12px; }
+    .evidence-card { border: 1px solid var(--line); padding: 15px; }
+    .evidence-card.selected { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
+    .evidence-top { align-items: start; display: flex; gap: 12px; justify-content: space-between; }
+    .evidence-index { align-items: center; background: var(--blue-soft); color: var(--blue); display: grid; flex: 0 0 auto; font-size: 11px; font-weight: 800; height: 27px; place-items: center; width: 27px; }
+    .evidence-card h3 { line-height: 1.4; margin: 0; }
+    .evidence-card p { color: var(--muted); font-size: 12px; line-height: 1.55; margin: 9px 0 12px; }
+    .evidence-footer { align-items: center; border-top: 1px solid #edf1ee; display: flex; justify-content: space-between; padding-top: 10px; }
+    .trace-link { background: none; border: 0; color: var(--blue); cursor: pointer; font-size: 11px; font-weight: 750; padding: 0; }
+    .finding { border-left: 3px solid var(--green); margin-bottom: 15px; padding-left: 13px; }
+    .finding:last-child { margin-bottom: 0; }
+    .finding p { font-size: 13px; line-height: 1.58; margin-bottom: 8px; }
+    .finding .tiny { margin: 0; }
+    .uncertainty { background: var(--amber-soft); color: #765015; font-size: 11px; line-height: 1.5; padding: 10px 11px; }
+    .activity { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 14px; }
+    .activity-row { align-items: baseline; display: flex; font-size: 11px; gap: 9px; line-height: 1.6; padding: 4px 0; }
+    .activity-row time { color: var(--muted); flex: 0 0 42px; font-family: monospace; }
+
+    .layout-b { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 310px; }
+    .canvas-panel { min-height: 610px; overflow: hidden; position: relative; }
+    .canvas-head { align-items: center; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; padding: 17px 20px; }
+    .canvas-head h2 { margin: 0; }
+    .canvas { align-items: center; display: flex; flex-direction: column; gap: 13px; padding: 30px 20px 38px; }
+    .flow-node { background: var(--white); border: 1px solid var(--line); max-width: 430px; padding: 15px 17px; width: 100%; }
+    .flow-node.anomaly { border-top: 4px solid var(--coral); }
+    .flow-node.hypothesis { border-top: 4px solid var(--amber); cursor: pointer; }
+    .flow-node.hypothesis:hover, .flow-node.hypothesis.active { background: #fffaf2; border-color: #d5a45e; }
+    .flow-node.evidence { border-top: 4px solid var(--blue); }
+    .flow-node.finding { border-left: 0; border-top: 4px solid var(--green); margin: 0; padding-left: 17px; }
+    .flow-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; margin-bottom: 7px; text-transform: uppercase; }
+    .flow-node strong { display: block; font-size: 15px; line-height: 1.4; }
+    .flow-node p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 7px 0 0; }
+    .flow-arrow { color: #9aaba7; font-size: 20px; height: 18px; line-height: 18px; }
+    .branch-row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; max-width: 650px; width: 100%; }
+    .branch-row .flow-node { max-width: none; }
+    .side-stack { display: grid; gap: 16px; align-content: start; }
+    .decision-list { display: grid; gap: 9px; }
+    .decision-row { align-items: start; border-bottom: 1px solid #edf1ee; display: grid; gap: 10px; grid-template-columns: 25px 1fr; padding-bottom: 10px; }
+    .decision-row:last-child { border: 0; padding-bottom: 0; }
+    .decision-icon { align-items: center; display: grid; font-size: 12px; font-weight: 800; height: 22px; place-items: center; width: 22px; }
+    .decision-icon.support { background: var(--green-soft); color: var(--green); }
+    .decision-icon.reject { background: var(--coral-soft); color: var(--coral); }
+    .decision-icon.open { background: var(--amber-soft); color: var(--amber); }
+    .decision-row strong { display: block; font-size: 12px; line-height: 1.4; }
+    .decision-row p { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 4px 0 0; }
+    .trace-table { border-collapse: collapse; font-size: 11px; width: 100%; }
+    .trace-table td { border-bottom: 1px solid #edf1ee; padding: 8px 0; vertical-align: top; }
+    .trace-table td:first-child { color: var(--muted); padding-right: 8px; width: 35%; }
+
+    .layout-c { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr); }
+    .brief { padding: clamp(22px, 4vw, 48px); }
+    .brief-kicker { align-items: center; display: flex; gap: 10px; margin-bottom: 26px; }
+    .brief h1 { font-size: clamp(30px, 4.4vw, 57px); max-width: 820px; }
+    .brief-lead { color: #405056; font-size: 18px; line-height: 1.55; max-width: 710px; }
+    .brief-rule { border: 0; border-top: 1px solid var(--line); margin: 31px 0; }
+    .brief-section { max-width: 850px; }
+    .brief-section h2 { align-items: center; display: flex; gap: 10px; }
+    .number { color: var(--green); font-family: monospace; font-size: 12px; }
+    .hypothesis-table { border-top: 1px solid var(--line); margin-top: 12px; }
+    .hypothesis-line { align-items: center; border-bottom: 1px solid var(--line); cursor: pointer; display: grid; gap: 12px; grid-template-columns: 22px minmax(150px, 1fr) 110px 78px; padding: 13px 0; }
+    .hypothesis-line:hover { background: #fbfcfb; }
+    .hypothesis-line .rank { color: var(--muted); font-family: monospace; font-size: 12px; }
+    .hypothesis-line strong { font-size: 13px; }
+    .bar { background: #e8eeea; height: 6px; overflow: hidden; }
+    .bar i { background: var(--green); display: block; height: 100%; }
+    .confidence { color: var(--green); font-size: 11px; font-weight: 800; text-align: right; }
+    .brief-footer { align-items: start; display: grid; gap: 22px; grid-template-columns: 1fr 1fr; }
+    .proof-box { background: #f2f7f4; border-left: 3px solid var(--green); padding: 14px 15px; }
+    .proof-box strong { display: block; font-size: 12px; margin-bottom: 6px; }
+    .proof-box p { color: #496158; font-size: 12px; line-height: 1.5; margin: 0; }
+    .sidebar-c { display: grid; gap: 16px; align-content: start; }
+    .sidebar-c .panel { box-shadow: none; }
+    .fact-list { display: grid; gap: 11px; }
+    .fact { border-bottom: 1px solid #edf1ee; padding-bottom: 10px; }
+    .fact:last-child { border-bottom: 0; padding-bottom: 0; }
+    .fact small { color: var(--muted); display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; margin-bottom: 5px; text-transform: uppercase; }
+    .fact strong { font-size: 14px; line-height: 1.45; }
+    .fact p { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 4px 0 0; }
+
+    .switcher { align-items: center; background: var(--ink); bottom: 18px; box-shadow: 0 12px 28px rgba(23, 33, 38, .22); color: #fff; display: flex; gap: 8px; left: 50%; padding: 7px 8px; position: fixed; transform: translateX(-50%); z-index: 10; }
+    .switcher button { align-items: center; background: transparent; border: 0; color: #c9d8d2; cursor: pointer; display: grid; height: 30px; place-items: center; width: 30px; }
+    .switcher button:hover { background: #33434a; color: #fff; }
+    .switcher-label { border-left: 1px solid #45555b; border-right: 1px solid #45555b; font-size: 11px; min-width: 180px; padding: 0 13px; text-align: center; }
+    .switcher-label strong { color: #fff; }
+    .toast { background: var(--ink); bottom: 78px; color: #fff; font-size: 12px; left: 50%; opacity: 0; padding: 10px 13px; pointer-events: none; position: fixed; transform: translate(-50%, 8px); transition: .2s ease; z-index: 9; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .clarify-box { background: var(--blue-soft); border-left: 3px solid var(--blue); color: #315678; font-size: 12px; line-height: 1.55; margin-top: 14px; padding: 11px 13px; }
+
+    @media (max-width: 1120px) {
+      .layout-a { grid-template-columns: 235px minmax(0, 1fr); }
+      .layout-a > .panel:last-child { grid-column: 1 / -1; }
+      .layout-c { grid-template-columns: 1fr; }
+      .sidebar-c { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 760px) {
+      .topbar { align-items: start; }
+      .top-meta { align-items: end; flex-direction: column; gap: 5px; }
+      .hero-row { align-items: start; flex-direction: column; }
+      .hero-actions { justify-content: start; }
+      .layout-a, .layout-b { grid-template-columns: 1fr; }
+      .layout-a > .panel:last-child { grid-column: auto; }
+      .layout-b .canvas-panel { min-height: 0; }
+      .sidebar-c { grid-template-columns: 1fr; }
+      .brief-footer { grid-template-columns: 1fr; }
+      .hypothesis-line { grid-template-columns: 22px minmax(0, 1fr) 72px; }
+      .hypothesis-line .bar { display: none; }
+      .switcher-label { min-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">D</span><span class="brand-name">DATADETECTIVE</span></div>
+      <div class="top-meta"><span><i class="status-dot"></i> READ-ONLY WORKSPACE</span><span class="prototype-stamp">PROTOTYPE / THROWAWAY</span></div>
+    </header>
+    <main id="app" class="main"></main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <nav class="switcher" aria-label="Prototype variants">
+      <button type="button" data-switch="previous" title="Previous variant" aria-label="Previous variant">←</button>
+      <div class="switcher-label"><strong id="variant-key">A</strong> <span id="variant-name">Evidence ledger</span></div>
+      <button type="button" data-switch="next" title="Next variant" aria-label="Next variant">→</button>
+    </nav>
+  </div>
+  <script>
+    // Prototype question: which investigation surface makes evidence and uncertainty easiest to judge?
+    const variants = [
+      { key: "A", name: "Evidence ledger" },
+      { key: "B", name: "Investigation canvas" },
+      { key: "C", name: "Decision brief" }
+    ];
+    const hypothesisData = [
+      { id: "H1", title: "渠道流量减少", detail: "Direct traffic fell on mobile", status: "weakened", confidence: 22, color: "coral" },
+      { id: "H2", title: "移动端结算转化下降", detail: "Checkout completion fell after cart", status: "supported", confidence: 86, color: "green" },
+      { id: "H3", title: "商品结构向低价倾斜", detail: "More low-price items were purchased", status: "open", confidence: 58, color: "amber" }
+    ];
+    let state = {
+      phase: "ready",
+      selected: "H2",
+      clarified: false,
+      events: ["等待开始调查"]
+    };
+
+    function currentVariant() {
+      const raw = new URLSearchParams(location.search).get("variant") || "A";
+      return variants.some(item => item.key === raw) ? raw : "A";
+    }
+
+    function setVariant(key) {
+      const url = new URL(location.href);
+      url.searchParams.set("variant", key);
+      history.replaceState({}, "", url);
+      render();
+    }
+
+    function cycleVariant(direction) {
+      const index = variants.findIndex(item => item.key === currentVariant());
+      const next = (index + direction + variants.length) % variants.length;
+      setVariant(variants[next].key);
+    }
+
+    function notify(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(window.__toastTimer);
+      window.__toastTimer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function action(action, id) {
+      if (action === "run") {
+        if (state.phase === "running") return;
+        state.phase = "running";
+        state.events.unshift("Agent 正在检查字段、时间窗口和维度贡献");
+        render();
+        window.setTimeout(() => {
+          state.phase = "complete";
+          state.events.unshift("已生成 3 个假设，完成 7 次只读证据调用");
+          render();
+          notify("调查完成：Finding 已绑定 Evidence");
+        }, 720);
+        return;
+      }
+      if (action === "reset") {
+        state = { phase: "ready", selected: "H2", clarified: false, events: ["等待开始调查"] };
+        render();
+        notify("已重置为新的调查");
+        return;
+      }
+      if (action === "hypothesis") {
+        state.selected = id;
+        state.events.unshift("查看 " + id + " 的证据链");
+        render();
+        return;
+      }
+      if (action === "clarify") {
+        state.clarified = !state.clarified;
+        state.events.unshift(state.clarified ? "用户确认：GMV = 已支付订单金额" : "收起指标定义确认");
+        render();
+        return;
+      }
+      if (action === "trace") {
+        state.events.unshift("打开 Evidence E-02：移动端结算漏斗 SQL");
+        render();
+        notify("Evidence E-02 已定位");
+      }
+    }
+
+    function bindActions() {
+      document.querySelectorAll("[data-action]").forEach(element => {
+        element.addEventListener("click", () => action(element.dataset.action, element.dataset.id));
+      });
+      if (!window.__switcherBound) {
+        document.querySelectorAll("[data-switch]").forEach(element => {
+          element.addEventListener("click", () => cycleVariant(element.dataset.switch === "next" ? 1 : -1));
+        });
+        window.__switcherBound = true;
+      }
+    }
+
+    function sharedHero() {
+      const running = state.phase === "running";
+      const complete = state.phase === "complete";
+      return `
+        <div class="hero-row">
+          <div>
+            <p class="eyebrow">Investigation / DD-1042 / 24 Aug 2026</p>
+            <h1>为什么最近 7 天 GMV 下降了 18.4%？</h1>
+            <p class="subline">数据源：orders.sqlite · 3 张表 · 2026-08-18 至 2026-08-24，对比前一周。调查只读执行，所有结论必须引用已执行 Evidence。</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-secondary" data-action="clarify">⌁ 指标定义${state.clarified ? "已确认" : "待确认"}</button>
+            <button class="btn btn-secondary" data-action="reset">↺ 重置</button>
+            <button class="btn btn-primary" data-action="run" ${running ? "disabled" : ""}>${running ? "◌ 调查中" : complete ? "✓ 重新调查" : "▶ 开始调查"}</button>
+          </div>
+        </div>
+        ${state.clarified ? '<div class="clarify-box"><strong>待用户确认：</strong>本次 Metric 暂按“已支付订单金额（含折扣，不含取消订单）”计算。确认后，Agent 才会把不同表的金额字段纳入同一调查。</div>' : ""}
+      `;
+    }
+
+    function metricStrip() {
+      return `
+        <div class="metric-strip">
+          <div class="metric-chip"><small>GMV</small><strong class="negative">-18.4%</strong></div>
+          <div class="metric-chip"><small>订单数</small><strong class="negative">-11.2%</strong></div>
+          <div class="metric-chip"><small>客单价</small><strong class="positive">+3.1%</strong></div>
+          <div class="metric-chip"><small>证据状态</small><strong class="neutral">${state.phase === "complete" ? "7 / 7" : "待执行"}</strong></div>
+        </div>
+      `;
+    }
+
+    function stateLine() {
+      const text = state.phase === "ready" ? "调查尚未执行 · 先确认 Metric 定义，再让 Agent 选择证据工具" : state.phase === "running" ? "执行中 · 正在检查字段、拆解维度贡献并保存每次工具调用" : "调查完成 · 3 个 Hypotheses 已排序，7 个 Evidence 已保存，可重放";
+      return `<div class="state-line ${state.phase}"><span>${state.phase === "complete" ? "✓" : state.phase === "running" ? "◌" : "○"}</span>${text}</div>`;
+    }
+
+    function hypothesisList() {
+      return hypothesisData.map(item => `
+        <button class="hypothesis-item ${state.selected === item.id ? "selected" : ""}" data-action="hypothesis" data-id="${item.id}">
+          <div class="item-top"><span class="hypothesis-id">${item.id}</span><span class="tag tag-${item.color}">${item.status}</span></div>
+          <strong>${item.title}</strong>
+          <p>${item.detail}</p>
+        </button>
+      `).join("");
+    }
+
+    function evidenceCards() {
+      const selected = state.selected;
+      return `
+        <div class="evidence-stack">
+          <article class="evidence-card ${selected === "H2" ? "selected" : ""}">
+            <div class="evidence-top"><div style="display:flex;gap:11px"><span class="evidence-index">E1</span><h3>移动端结算漏斗在比较窗口下降 31%</h3></div><span class="tag tag-green">supports H2</span></div>
+            <p>orders.sqlite / funnel_daily：移动端 cart → paid 从 42.8% 降至 29.5%，桌面端基本稳定。差异集中在 Android 设备。</p>
+            <div class="evidence-footer"><span class="tiny mono">query:funnel_07 · 0.8s · replayable</span><button class="trace-link" data-action="trace">查看 SQL →</button></div>
+          </article>
+          <article class="evidence-card ${selected === "H1" ? "selected" : ""}">
+            <div class="evidence-top"><div style="display:flex;gap:11px"><span class="evidence-index">E2</span><h3>渠道流量不是主要贡献项</h3></div><span class="tag tag-coral">weakens H1</span></div>
+            <p>mobile_direct sessions 仅下降 4.2%，不足以解释 18.4% 的 GMV 变化；其余渠道流量合计保持稳定。</p>
+            <div class="evidence-footer"><span class="tiny mono">query:channel_delta_03 · 0.6s · replayable</span><button class="trace-link" data-action="trace">查看 SQL →</button></div>
+          </article>
+          <article class="evidence-card ${selected === "H3" ? "selected" : ""}">
+            <div class="evidence-top"><div style="display:flex;gap:11px"><span class="evidence-index">E3</span><h3>客单价上升，排除低价结构主因</h3></div><span class="tag tag-amber">open H3</span></div>
+            <p>AOV 从 ¥218 升至 ¥225。低价商品份额虽有变化，但方向与 GMV 下跌不一致，仍需检查商品组合口径。</p>
+            <div class="evidence-footer"><span class="tiny mono">query:aov_mix_11 · 0.9s · replayable</span><button class="trace-link" data-action="trace">查看 SQL →</button></div>
+          </article>
+        </div>
+      `;
+    }
+
+    function activity() {
+      return `<div class="activity"><p class="eyebrow">Trace / live state</p>${state.events.slice(0, 4).map((event, index) => `<div class="activity-row"><time>${String(10 - index).padStart(2, "0")}:2${index}</time><span>${event}</span></div>`).join("")}</div>`;
+    }
+
+    function findingPanel() {
+      return `
+        <section class="panel">
+          <div class="panel-head"><h2>Investigation Report</h2><span class="tag tag-green">${state.phase === "complete" ? "draft ready" : "not ready"}</span></div>
+          <div class="panel-body">
+            <div class="finding"><p><strong>主要发现：</strong>GMV 下跌主要与 Android 移动端支付转化下降有关。</p><p class="tiny">证据：E1 · 贡献关系，不自动等于因果</p></div>
+            <div class="finding"><p><strong>被削弱的解释：</strong>渠道流量下降不足以解释整体变化。</p><p class="tiny">证据：E2 · 需要继续检查投放事件日志</p></div>
+            <div class="uncertainty"><strong>仍未证明：</strong>当前数据能定位到“结算漏斗”的变化，但不能证明是哪个产品发布或支付服务事件导致了变化。</div>
+            ${activity()}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderA() {
+      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="layout-a"><section class="panel"><div class="panel-head"><h2>Hypotheses</h2><span class="panel-note">3 candidates</span></div><div class="hypothesis-list">${hypothesisList()}</div></section><section class="panel"><div class="panel-head"><h2>Evidence Ledger</h2><span class="panel-note">click a hypothesis to filter</span></div><div class="panel-body">${evidenceCards()}</div></section>${findingPanel()}</div>`;
+    }
+
+    function renderB() {
+      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="layout-b"><section class="panel canvas-panel"><div class="canvas-head"><div><p class="eyebrow">Investigation graph</p><h2>从异常到可支持的 Finding</h2></div><span class="tag tag-blue">stateful trace</span></div><div class="canvas"><div class="flow-node anomaly"><div class="flow-label">Observed anomaly</div><strong>GMV -18.4% vs previous 7 days</strong><p>这是一项需要调查的观察，不预设它是数据错误或业务根因。</p></div><div class="flow-arrow">↓</div><div class="branch-row"><div class="flow-node hypothesis ${state.selected === "H1" ? "active" : ""}" data-action="hypothesis" data-id="H1"><div class="flow-label">H1 / weakened</div><strong>渠道流量减少</strong><p>E2：贡献不足以解释总变化。</p></div><div class="flow-node hypothesis ${state.selected === "H2" ? "active" : ""}" data-action="hypothesis" data-id="H2"><div class="flow-label">H2 / supported</div><strong>移动端结算转化下降</strong><p>E1：Android checkout → paid -31%。</p></div></div><div class="flow-arrow">↓</div><div class="flow-node evidence"><div class="flow-label">Executed evidence</div><strong>E1 · funnel_daily / query:funnel_07</strong><p>Evidence 可重放，结果包含受影响分群、时间窗口和比较值。</p><div style="margin-top:10px"><button class="trace-link" data-action="trace">打开执行详情 →</button></div></div><div class="flow-arrow">↓</div><div class="flow-node finding"><div class="flow-label">Finding / qualified</div><strong>移动端支付转化下降是当前最有证据支持的贡献因素。</strong><p>不声称已证明具体因果事件；下一步需要支付服务日志或发布记录。</p></div></div></section><aside class="side-stack"><section class="panel"><div class="panel-head"><h2>Decision log</h2><span class="panel-note">state changes</span></div><div class="panel-body"><div class="decision-list"><div class="decision-row"><span class="decision-icon support">✓</span><div><strong>保留 H2</strong><p>E1 支持 Android checkout 转化下降。</p></div></div><div class="decision-row"><span class="decision-icon reject">×</span><div><strong>削弱 H1</strong><p>E2 显示流量贡献不足。</p></div></div><div class="decision-row"><span class="decision-icon open">?</span><div><strong>保留 H3 为开放</strong><p>AOV 方向相反，需要更多商品组合证据。</p></div></div></div></div></section><section class="panel"><div class="panel-head"><h2>Evidence contract</h2><span class="panel-note">replay metadata</span></div><div class="panel-body"><table class="trace-table"><tr><td>Input hash</td><td class="mono">sha256:4c9f...b81</td></tr><tr><td>Tool calls</td><td>7 executed / 0 failed</td></tr><tr><td>Replay</td><td><span class="tag tag-green">ready</span></td></tr><tr><td>Claim limit</td><td>contribution ≠ causation</td></tr></table></div></section></aside></div>`;
+    }
+
+    function renderC() {
+      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="layout-c"><article class="panel brief"><div class="brief-kicker"><span class="tag tag-green">Investigation Report / draft</span><span class="tiny">last updated 10:24</span></div><p class="eyebrow">Executive finding</p><h1>GMV 下降的主要贡献来自 Android 端结算转化。</h1><p class="brief-lead">移动端 cart → paid 在比较窗口下降 31%，而桌面端稳定。渠道流量和客单价的变化方向与主因不符。</p><hr class="brief-rule"><section class="brief-section"><h2><span class="number">01</span> Hypothesis ranking</h2><p class="tiny">排序反映当前证据支持度，不代表已证明因果。</p><div class="hypothesis-table">${hypothesisData.map(item => `<div class="hypothesis-line" data-action="hypothesis" data-id="${item.id}"><span class="rank">${item.id}</span><strong>${item.title}</strong><span class="bar"><i style="width:${item.confidence}%"></i></span><span class="confidence">${item.confidence}%</span></div>`).join("")}</div></section><hr class="brief-rule"><div class="brief-footer"><section class="brief-section"><h2><span class="number">02</span> What the data supports</h2><div class="proof-box"><strong>Finding F1 · supported by E1</strong><p>Android checkout completion is the strongest observed contribution to the GMV movement. Query and input snapshot are replayable.</p></div></section><section class="brief-section"><h2><span class="number">03</span> What remains unknown</h2><div class="proof-box" style="border-color:var(--amber);background:var(--amber-soft)"><strong>Do not overclaim causality</strong><p>The current exports cannot identify the product release, payment incident, or user behavior change behind the funnel movement.</p></div></section></div></article><aside class="sidebar-c"><section class="panel"><div class="panel-head"><h2>Metric contract</h2><span class="tag tag-blue">confirmed</span></div><div class="panel-body"><div class="fact-list"><div class="fact"><small>Definition</small><strong>Paid order amount, after discount</strong></div><div class="fact"><small>Population</small><strong>Non-cancelled orders</strong></div><div class="fact"><small>Window</small><strong>18 Aug → 24 Aug 2026</strong><p>Compared with 11 Aug → 17 Aug 2026</p></div></div></div></section><section class="panel"><div class="panel-head"><h2>Next evidence</h2><span class="panel-note">human input</span></div><div class="panel-body"><p class="tiny">To explain the underlying cause, connect one of these sources:</p><div class="decision-list"><div class="decision-row"><span class="decision-icon open">+</span><div><strong>支付服务事件日志</strong><p>Check Android payment failures by release.</p></div></div><div class="decision-row"><span class="decision-icon open">+</span><div><strong>版本发布记录</strong><p>Compare checkout changes in the same window.</p></div></div></div><button class="btn btn-secondary" style="margin-top:14px;width:100%" data-action="clarify">⌁ 补充数据后继续</button></div></section>${activity()}</aside></div>`;
+    }
+
+    function render() {
+      const variant = currentVariant();
+      const active = variants.find(item => item.key === variant);
+      document.getElementById("variant-key").textContent = active.key;
+      document.getElementById("variant-name").textContent = active.name;
+      document.getElementById("app").innerHTML = variant === "A" ? renderA() : variant === "B" ? renderB() : renderC();
+      bindActions();
+    }
+
+    document.addEventListener("keydown", event => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+      if (event.key === "ArrowLeft") cycleVariant(-1);
+      if (event.key === "ArrowRight") cycleVariant(1);
+    });
+
+    render();
+  </script>
+</body>
+</html>
