@@ -37,3 +37,4 @@ The project is in product validation. The [Wayfinder issue](https://github.com/a
 - [Domain language](CONTEXT.md)
 - [Agent engineer hiring requirements](docs/agent-engineer-job-requirements.md)
 - [Product wayfinder](docs/wayfinder.md)
+- [Viability protocol](docs/viability-protocol.md)

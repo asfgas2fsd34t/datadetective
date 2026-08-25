@@ -23,7 +23,8 @@ Produce a handoff-ready product specification, technical architecture, and imple
 - See [Existing Alternatives to DataDetective](research/existing-alternatives.md).
 - No reviewed public dataset combines rich e-commerce data, permissive commercial reuse, and known root-cause labels. The scored benchmark core must use deterministic synthetic cases with hidden intervention manifests; UCI Online Retail can provide real-data holdouts.
 - See [Benchmark Data and Case Research](research/benchmark-data-and-cases.md).
-- No viability decision has been made yet.
+- The approved [viability protocol](viability-protocol.md) compares DataDetective with the same-model general-purpose file-analysis workflow using 24 synthetic cases and 6 UCI holdouts.
+- The project proceeds only if all hard gates pass and DataDetective improves at least one primary metric by 15 percentage points without a material regression.
 
 ## Not yet specified
 
