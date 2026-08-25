@@ -18,7 +18,10 @@ Produce a handoff-ready product specification, technical architecture, and imple
 
 ## Decisions so far
 
-No viability decision has been made yet.
+- The broad claim "ask why a business metric changed" is already occupied, most directly by ThoughtSpot Spotter.
+- DataDetective proceeds only as a benchmark-first experiment for raw exports, focused on explicit falsification, rerunnable evidence, and separating contribution from causality.
+- See [Existing Alternatives to DataDetective](research/existing-alternatives.md).
+- No viability decision has been made yet.
 
 ## Not yet specified
 

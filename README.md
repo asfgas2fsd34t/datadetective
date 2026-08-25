@@ -30,7 +30,7 @@ The first product gate asks one question: **does an investigation workflow outpe
 
 ## Current status
 
-The project is in product validation. The [Wayfinder issue](https://github.com/asfgas2fsd34t/datadetective/issues) tracks research, prototype, and go/no-go work. No production scaffold is included before viability is established.
+The project is in product validation. The [Wayfinder issue](https://github.com/asfgas2fsd34t/datadetective/issues/1) tracks research, prototype, and go/no-go work. No production scaffold is included before viability is established.
 
 ## Documentation
 
