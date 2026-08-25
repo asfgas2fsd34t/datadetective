@@ -169,6 +169,21 @@
     .chat-compose-footer { align-items: center; display: flex; justify-content: space-between; margin-top: 8px; }
     .live-graph-panel { min-height: 690px; overflow: hidden; }
     .live-graph { display: flex; flex-direction: column; gap: 9px; max-height: 640px; overflow: auto; padding: 19px; }
+    .graph-viewport { background-color: #f8faf8; background-image: linear-gradient(#e8efeb 1px, transparent 1px), linear-gradient(90deg, #e8efeb 1px, transparent 1px); background-size: 28px 28px; cursor: grab; height: 638px; overflow: hidden; position: relative; touch-action: none; }
+    .graph-viewport.is-panning { cursor: grabbing; }
+    .graph-world { height: 980px; position: absolute; transform-origin: 0 0; width: 1380px; }
+    .graph-world .graph-node { position: absolute; width: 245px; z-index: 2; }
+    .graph-world .graph-node:hover { z-index: 3; }
+    .graph-world .graph-node h3 { max-width: 172px; }
+    .graph-edges { height: 980px; left: 0; overflow: visible; pointer-events: none; position: absolute; top: 0; width: 1380px; z-index: 1; }
+    .graph-edge { fill: none; stroke: #9caea8; stroke-width: 2; }
+    .graph-edge.supports, .graph-edge.qualifies { stroke: var(--green); }
+    .graph-edge.weakens { stroke: var(--coral); stroke-dasharray: 7 5; }
+    .graph-edge.suggests, .graph-edge.narrows { stroke: var(--amber); stroke-dasharray: 4 4; }
+    .graph-edge-label { fill: #6e7d7a; font-size: 11px; font-weight: 700; }
+    .canvas-tools { align-items: center; display: flex; gap: 5px; }
+    .canvas-tool { align-items: center; background: var(--white); border: 1px solid var(--line); color: var(--ink); cursor: pointer; display: grid; font-size: 13px; height: 28px; place-items: center; width: 28px; }
+    .canvas-tool:hover { background: var(--green-soft); border-color: #8fb8a8; }
     .graph-node { background: var(--white); border: 1px solid var(--line); padding: 13px 14px; position: relative; transition: .25s ease; }
     .graph-node.is-new { animation: nodeIn .3s ease both; }
     .graph-node.anomaly { border-left: 4px solid var(--coral); }
@@ -321,7 +336,10 @@
     ];
     const defaultQuestion = "为什么最近 7 天 GMV 下降了 18.4%？";
     function initialGraph() {
-      return [{ id: "anomaly", kind: "anomaly", status: "observed", label: "异常 / GMV -18.4%", detail: "最近 7 天 vs 前一周 · 已支付订单金额", meta: "observed · source: orders.sqlite" }];
+      return {
+        nodes: [{ id: "anomaly", kind: "anomaly", status: "observed", x: 70, y: 300, label: "异常 / GMV -18.4%", detail: "最近 7 天 vs 前一周 · 已支付订单金额", meta: "observed · source: orders.sqlite" }],
+        edges: []
+      };
     }
     let state = {
       screen: "intake",
@@ -332,6 +350,7 @@
       clarified: false,
       messages: [],
       graph: initialGraph(),
+      view: { x: 28, y: 18, scale: .78 },
       events: ["等待开始调查"]
     };
 
@@ -380,12 +399,13 @@
       window.__runTimers = [];
     }
 
-    function addGraph(nodes) {
-      state.graph.push(...nodes);
+    function addGraph(nodes, edges = []) {
+      state.graph.nodes.push(...nodes);
+      state.graph.edges.push(...edges);
     }
 
     function updateGraph(id, updates) {
-      const node = state.graph.find(item => item.id === id);
+      const node = state.graph.nodes.find(item => item.id === id);
       if (node) Object.assign(node, updates);
     }
 
@@ -410,31 +430,35 @@
       ].map(step => ({ delay: step.delay, run: () => {
         const index = [420, 1100, 1780, 2460].indexOf(step.delay);
         if (index === 0) {
-          if (!state.graph.some(item => item.id === "h1")) addGraph([
-            { id: "h1", kind: "hypothesis", status: "testing", label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "pending evidence" },
-            { id: "h2", kind: "hypothesis", status: "testing", label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "pending evidence" },
-            { id: "h3", kind: "hypothesis", status: "testing", label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "pending evidence" }
+          if (!state.graph.nodes.some(item => item.id === "h1")) addGraph([
+            { id: "h1", kind: "hypothesis", status: "testing", x: 380, y: 110, label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "pending evidence" },
+            { id: "h2", kind: "hypothesis", status: "testing", x: 380, y: 300, label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "pending evidence" },
+            { id: "h3", kind: "hypothesis", status: "testing", x: 380, y: 490, label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "pending evidence" }
+          ], [
+            { from: "anomaly", to: "h1", relation: "tests" },
+            { from: "anomaly", to: "h2", relation: "tests" },
+            { from: "anomaly", to: "h3", relation: "tests" }
           ]);
           ["h1", "h2", "h3"].forEach(id => updateGraph(id, { status: "testing", meta: "testing now" }));
           state.events.unshift("已生成 3 个可证伪 Hypotheses");
           pushMessage("agent", "我先提出 3 个假设。接下来每个假设都必须连到实际执行的 Evidence。 ");
         }
         if (index === 1) {
-          addGraph([{ id: "e1", kind: "evidence", status: "complete", label: "E1 / Android checkout → paid -31%", detail: "移动端结算漏斗在比较窗口显著下降，桌面端稳定。", meta: "query:funnel_07 · replayable" }]);
+          addGraph([{ id: "e1", kind: "evidence", status: "complete", x: 720, y: 300, label: "E1 / Android checkout → paid -31%", detail: "移动端结算漏斗在比较窗口显著下降，桌面端稳定。", meta: "query:funnel_07 · replayable" }], [{ from: "h2", to: "e1", relation: "supports" }]);
           updateGraph("h2", { status: "supported", detail: "E1 支持 Android 结算转化下降", meta: "supported by E1" });
-          addGraph([{ id: "h2a", kind: "hypothesis", status: "open", label: "H2.1 / 支付渠道失败", detail: "新线索：需要支付错误日志才能继续判断", meta: "new branch from E1" }]);
+          addGraph([{ id: "h2a", kind: "hypothesis", status: "open", x: 1010, y: 390, label: "H2.1 / 支付渠道失败", detail: "新线索：需要支付错误日志才能继续判断", meta: "new branch from E1" }], [{ from: "e1", to: "h2a", relation: "suggests" }]);
           state.selected = "h2";
           state.events.unshift("E1 完成：H2 得到支持，并产生新分支 H2.1");
           pushMessage("agent", "E1 支持 H2。我发现一个新线索：可能是支付渠道失败，但当前订单数据还不能证明，需要支付错误日志。 ");
         }
         if (index === 2) {
-          addGraph([{ id: "e2", kind: "evidence", status: "complete", label: "E2 / 渠道流量贡献不足", detail: "mobile_direct sessions 仅下降 4.2%，不足以解释 GMV 下跌。", meta: "query:channel_delta_03 · replayable" }]);
+          addGraph([{ id: "e2", kind: "evidence", status: "complete", x: 720, y: 110, label: "E2 / 渠道流量贡献不足", detail: "mobile_direct sessions 仅下降 4.2%，不足以解释 GMV 下跌。", meta: "query:channel_delta_03 · replayable" }], [{ from: "h1", to: "e2", relation: "weakens" }]);
           updateGraph("h1", { status: "weakened", detail: "E2 显示流量变化不是主要贡献项", meta: "weakened by E2" });
           state.events.unshift("E2 完成：H1 被削弱");
           pushMessage("agent", "E2 削弱了 H1。它仍保留在调查图中，但不会进入当前主要 Finding。 ");
         }
         if (index === 3) {
-          addGraph([{ id: "e3", kind: "evidence", status: "complete", label: "E3 / AOV +3.1%", detail: "客单价上升，低价商品结构变化不是主要解释。", meta: "query:aov_mix_11 · replayable" }, { id: "f1", kind: "finding", status: "complete", label: "F1 / Android 转化是主要贡献因素", detail: "当前证据支持贡献关系，但不能证明具体因果事件。", meta: "supported by E1 · qualified" }]);
+          addGraph([{ id: "e3", kind: "evidence", status: "complete", x: 720, y: 490, label: "E3 / AOV +3.1%", detail: "客单价上升，低价商品结构变化不是主要解释。", meta: "query:aov_mix_11 · replayable" }, { id: "f1", kind: "finding", status: "complete", x: 1010, y: 190, label: "F1 / Android 转化是主要贡献因素", detail: "当前证据支持贡献关系，但不能证明具体因果事件。", meta: "supported by E1 · qualified" }], [{ from: "h3", to: "e3", relation: "weakens" }, { from: "h2", to: "f1", relation: "supports" }, { from: "e1", to: "f1", relation: "qualifies" }]);
           updateGraph("h3", { status: "weakened", detail: "E3 方向与低价结构主因不一致", meta: "weakened by E3" });
           state.phase = "complete";
           state.events.unshift("调查完成：3 个 Evidence、1 个 Finding、1 个开放分支");
@@ -459,10 +483,10 @@
         state.events.unshift("用户补充了指标定义，生成调查计划");
         pushMessage("agent", "收到。我会按“已支付订单金额、排除取消订单、对比前 7 天”处理。\n\n调查计划：渠道流量、设备转化、商品结构。确认后我开始执行。 ");
         addGraph([
-          { id: "h1", kind: "hypothesis", status: "planned", label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "planned" },
-          { id: "h2", kind: "hypothesis", status: "planned", label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "planned" },
-          { id: "h3", kind: "hypothesis", status: "planned", label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "planned" }
-        ]);
+          { id: "h1", kind: "hypothesis", status: "planned", x: 380, y: 110, label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "planned" },
+          { id: "h2", kind: "hypothesis", status: "planned", x: 380, y: 300, label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "planned" },
+          { id: "h3", kind: "hypothesis", status: "planned", x: 380, y: 490, label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "planned" }
+        ], [{ from: "anomaly", to: "h1", relation: "tests" }, { from: "anomaly", to: "h2", relation: "tests" }, { from: "anomaly", to: "h3", relation: "tests" }]);
         render();
         return;
       }
@@ -470,13 +494,14 @@
       if (state.phase === "complete") {
         state.phase = "follow_up";
         state.events.unshift("收到追问，创建新的调查范围");
-        addGraph([{ id: "scope-" + Date.now(), kind: "scope", status: "running", label: "追问 / " + text, detail: "在原调查基础上增加新的过滤条件或证据需求", meta: "follow-up running" }]);
+        const scopeId = "scope-" + Date.now();
+        addGraph([{ id: scopeId, kind: "scope", status: "running", x: 70, y: 730, label: "追问 / " + text, detail: "在原调查基础上增加新的过滤条件或证据需求", meta: "follow-up running" }]);
         pushMessage("agent", "收到追问。我会保留原调查结果，并在新的范围下追加 Evidence，不会覆盖已有证据。 ");
         render();
         window.setTimeout(() => {
-          const scope = state.graph.find(item => item.kind === "scope" && item.status === "running");
+          const scope = state.graph.nodes.find(item => item.kind === "scope" && item.status === "running");
           if (scope) Object.assign(scope, { status: "complete", meta: "scope confirmed" });
-          addGraph([{ id: "e-follow-up", kind: "evidence", status: "complete", label: "E8 / 追问范围 Evidence", detail: "新增范围下的分群结果已生成，可与原 Evidence 对比。", meta: "query:follow_up_01 · replayable" }]);
+          addGraph([{ id: "h-follow-up", kind: "hypothesis", status: "supported", x: 380, y: 730, label: "H4 / 追问范围假设", detail: "在新增范围下验证原结论是否成立", meta: "follow-up hypothesis" }, { id: "e-follow-up", kind: "evidence", status: "complete", x: 720, y: 730, label: "E8 / 追问范围 Evidence", detail: "新增范围下的分群结果已生成，可与原 Evidence 对比。", meta: "query:follow_up_01 · replayable" }], [{ from: scopeId, to: "h-follow-up", relation: "narrows" }, { from: "h-follow-up", to: "e-follow-up", relation: "supports" }]);
           state.phase = "complete";
           state.events.unshift("追问完成：新增 E8，原调查链路保留");
           pushMessage("agent", "追问完成。新的 Evidence 已加入调查图，原来的 H1/H2/H3 和 F1 仍然可查看。 ");
@@ -523,9 +548,19 @@
         sendChat(id);
         return;
       }
+      if (action === "zoom-in" || action === "zoom-out") {
+        state.view.scale = Math.min(1.35, Math.max(.45, state.view.scale + (action === "zoom-in" ? .1 : -.1)));
+        render();
+        return;
+      }
+      if (action === "fit-graph") {
+        state.view = { x: 28, y: 18, scale: .78 };
+        render();
+        return;
+      }
       if (action === "reset") {
         clearRunTimers();
-        state = { screen: "intake", phase: "ready", question: "", fileName: "", selected: "H2", clarified: false, messages: [], graph: initialGraph(), events: ["等待开始调查"] };
+        state = { screen: "intake", phase: "ready", question: "", fileName: "", selected: "H2", clarified: false, messages: [], graph: initialGraph(), view: { x: 28, y: 18, scale: .78 }, events: ["等待开始调查"] };
         render();
         notify("已回到新的调查");
         return;
@@ -716,18 +751,70 @@
 
     function graphNode(node) {
       const selected = state.selected && state.selected.toLowerCase() === node.id.toLowerCase();
-      return `<article class="graph-node ${node.kind} ${node.status} ${selected ? "selected" : ""}" data-action="${node.kind === "hypothesis" ? "hypothesis" : "trace"}" data-id="${node.id}">
+      return `<article class="graph-node ${node.kind} ${node.status} ${selected ? "selected" : ""}" style="left:${node.x}px;top:${node.y}px" data-action="${node.kind === "hypothesis" ? "hypothesis" : "trace"}" data-id="${node.id}">
         <div class="graph-node-top"><h3>${escapeHtml(node.label)}</h3>${graphStatus(node.status)}</div>
         <p>${escapeHtml(node.detail)}</p>
         <div class="graph-meta">${escapeHtml(node.meta)}</div>
       </article>`;
     }
 
+    function graphEdge(edge) {
+      const from = state.graph.nodes.find(node => node.id === edge.from);
+      const to = state.graph.nodes.find(node => node.id === edge.to);
+      if (!from || !to) return "";
+      const startX = from.x + 245;
+      const startY = from.y + 48;
+      const endX = to.x;
+      const endY = to.y + 48;
+      const curve = Math.max(65, Math.abs(endX - startX) * .45);
+      const labelX = (startX + endX) / 2;
+      const labelY = (startY + endY) / 2 - 6;
+      return `<path class="graph-edge ${edge.relation}" marker-end="url(#arrow)" d="M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}"></path><text class="graph-edge-label" x="${labelX}" y="${labelY}">${escapeHtml(edge.relation)}</text>`;
+    }
+
     function renderLiveGraph() {
-      const anomaly = state.graph.find(node => node.kind === "anomaly");
-      const hypotheses = state.graph.filter(node => node.kind === "hypothesis");
-      const downstream = state.graph.filter(node => ["scope", "evidence", "finding"].includes(node.kind));
-      return `<div class="live-graph">${graphNode(anomaly)}<div class="graph-arrow">↓ Agent proposes and tests competing explanations</div>${hypotheses.length ? `<div class="graph-branches">${hypotheses.map(graphNode).join("")}</div>` : `<div class="graph-empty">${state.phase === "clarifying" ? "等待用户确认指标定义，暂不生成假设。" : "确认调查计划后，Hypotheses 会在这里出现。"}</div>`}${downstream.length ? `<div class="graph-arrow">↓ new Evidence and findings append here</div>${downstream.map(node => graphNode(node)).join('<div class="graph-arrow">↓</div>')}` : ""}</div>`;
+      const nodes = state.graph.nodes;
+      return `<div class="graph-viewport" id="graph-viewport"><div class="graph-world" id="graph-world"><svg class="graph-edges" viewBox="0 0 1380 980" aria-hidden="true"><defs><marker id="arrow" markerHeight="7" markerWidth="7" orient="auto" refX="6" refY="3.5" viewBox="0 0 7 7"><path d="M 0 0 L 7 3.5 L 0 7 z" fill="#849691"></path></marker></defs>${state.graph.edges.map(graphEdge).join("")}</svg>${nodes.map(graphNode).join("")}</div><div class="graph-empty" style="bottom:14px;left:14px;position:absolute;right:14px;z-index:4">拖动画布查看不同调查树 · 点击节点查看详情 · 滚轮缩放</div></div>`;
+    }
+
+    function bindGraphCanvas() {
+      const viewport = document.getElementById("graph-viewport");
+      const world = document.getElementById("graph-world");
+      if (!viewport || !world) return;
+      const applyTransform = () => { world.style.transform = `translate(${state.view.x}px, ${state.view.y}px) scale(${state.view.scale})`; };
+      applyTransform();
+      let dragging = false;
+      let lastX = 0;
+      let lastY = 0;
+      viewport.addEventListener("pointerdown", event => {
+        if (event.target.closest(".graph-node") || event.target.closest("button")) return;
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        viewport.classList.add("is-panning");
+        viewport.setPointerCapture(event.pointerId);
+      });
+      viewport.addEventListener("pointermove", event => {
+        if (!dragging) return;
+        state.view.x += event.clientX - lastX;
+        state.view.y += event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        applyTransform();
+      });
+      const stopPanning = event => {
+        if (!dragging) return;
+        dragging = false;
+        viewport.classList.remove("is-panning");
+        viewport.releasePointerCapture?.(event.pointerId);
+      };
+      viewport.addEventListener("pointerup", stopPanning);
+      viewport.addEventListener("pointercancel", stopPanning);
+      viewport.addEventListener("wheel", event => {
+        event.preventDefault();
+        state.view.scale = Math.min(1.35, Math.max(.45, state.view.scale + (event.deltaY > 0 ? -.06 : .06)));
+        applyTransform();
+      }, { passive: false });
     }
 
     function renderChatPanel() {
@@ -737,12 +824,12 @@
 
     function renderGraphDetail() {
       const selectedId = state.selected && state.selected.toLowerCase();
-      const selected = state.graph.find(node => node.id.toLowerCase() === selectedId) || state.graph[state.graph.length - 1];
+      const selected = state.graph.nodes.find(node => node.id.toLowerCase() === selectedId) || state.graph.nodes[state.graph.nodes.length - 1];
       return `<section class="panel graph-detail"><div class="panel-head"><h2>Current node</h2><span class="panel-note">live state</span></div><div class="detail-stack"><div class="detail-block"><small>Selected</small><strong>${escapeHtml(selected?.label || "等待调查")}</strong><p>${escapeHtml(selected?.detail || "先在聊天区确认问题和调查计划。")}</p></div><div class="detail-block"><small>Status</small>${selected ? graphStatus(selected.status) : ""}<p>${escapeHtml(selected?.meta || "no evidence yet")}</p></div><div class="detail-block"><small>Investigation contract</small><strong>每个 Finding 都必须链接到已执行 Evidence</strong><p>当前画布只展示可验证状态，不展示模型内部思考。</p></div><div class="detail-block"><small>Next move</small><strong>${state.phase === "clarifying" ? "回答 Agent 的澄清问题" : state.phase === "plan_review" ? "确认调查计划" : state.phase === "running" ? "等待 Evidence 追加" : "继续追问或补充数据"}</strong></div></div></section>`;
     }
 
     function renderB() {
-      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="b-workspace">${renderChatPanel()}<section class="panel live-graph-panel"><div class="canvas-head"><div><p class="eyebrow">Live Investigation Canvas</p><h2>异常到 Finding 的实时路径</h2></div><span class="tag tag-blue">event-driven</span></div>${renderLiveGraph()}</section>${renderGraphDetail()}</div>`;
+      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="b-workspace">${renderChatPanel()}<section class="panel live-graph-panel"><div class="canvas-head"><div><p class="eyebrow">Live Investigation Canvas</p><h2>多棵调查树 / 关系画布</h2></div><div class="canvas-tools"><button class="canvas-tool" data-action="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button class="canvas-tool" data-action="fit-graph" title="Reset view" aria-label="Reset view">⌂</button><button class="canvas-tool" data-action="zoom-in" title="Zoom in" aria-label="Zoom in">＋</button><span class="tag tag-blue">event-driven</span></div></div>${renderLiveGraph()}</section>${renderGraphDetail()}</div>`;
     }
 
     function renderC() {
@@ -757,6 +844,7 @@
       document.querySelector(".switcher").style.display = state.screen === "intake" ? "none" : "flex";
       document.getElementById("app").innerHTML = state.screen === "intake" ? renderIntake() : variant === "A" ? renderA() : variant === "B" ? renderB() : renderC();
       bindActions();
+      bindGraphCanvas();
     }
 
     document.addEventListener("keydown", event => {
