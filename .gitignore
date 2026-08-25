@@ -1,0 +1,24 @@
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Java
+.gradle/
+build/
+target/
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.py[cod]
+
+# Local configuration and data
+.env
+.env.*
+!.env.example
+data/
+uploads/
+artifacts/
