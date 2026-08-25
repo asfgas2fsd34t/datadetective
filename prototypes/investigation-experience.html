@@ -150,6 +150,51 @@
     .activity-row time { color: var(--muted); flex: 0 0 42px; font-family: monospace; }
 
     .layout-b { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 310px; }
+    .b-workspace { display: grid; gap: 15px; grid-template-columns: 280px minmax(390px, 1fr) 285px; }
+    .chat-panel { display: flex; flex-direction: column; min-height: 690px; }
+    .chat-thread { display: flex; flex: 1; flex-direction: column; gap: 12px; max-height: 500px; overflow: auto; padding: 16px; }
+    .chat-message { display: flex; gap: 8px; line-height: 1.5; max-width: 94%; }
+    .chat-message.user { align-self: end; flex-direction: row-reverse; }
+    .chat-avatar { align-items: center; background: var(--ink); color: #fff; display: grid; flex: 0 0 auto; font-size: 10px; font-weight: 800; height: 25px; place-items: center; width: 25px; }
+    .chat-message.user .chat-avatar { background: var(--blue); }
+    .chat-bubble { background: #f1f5f2; font-size: 11px; padding: 9px 10px; }
+    .chat-message.user .chat-bubble { background: var(--blue-soft); }
+    .chat-bubble strong { display: block; font-size: 10px; letter-spacing: .08em; margin-bottom: 4px; text-transform: uppercase; }
+    .chat-suggestions { border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px 0; }
+    .suggestion { background: var(--white); border: 1px solid #a8c5b8; color: var(--green); cursor: pointer; font-size: 10px; line-height: 1.35; padding: 7px 8px; text-align: left; }
+    .suggestion:hover { background: var(--green-soft); }
+    .chat-compose { border-top: 1px solid var(--line); padding: 13px 14px 15px; }
+    .chat-compose textarea { border: 1px solid #b2c0bc; display: block; font: inherit; font-size: 12px; line-height: 1.45; min-height: 70px; padding: 9px; resize: vertical; width: 100%; }
+    .chat-compose textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); outline: 0; }
+    .chat-compose-footer { align-items: center; display: flex; justify-content: space-between; margin-top: 8px; }
+    .live-graph-panel { min-height: 690px; overflow: hidden; }
+    .live-graph { display: flex; flex-direction: column; gap: 9px; max-height: 640px; overflow: auto; padding: 19px; }
+    .graph-node { background: var(--white); border: 1px solid var(--line); padding: 13px 14px; position: relative; transition: .25s ease; }
+    .graph-node.is-new { animation: nodeIn .3s ease both; }
+    .graph-node.anomaly { border-left: 4px solid var(--coral); }
+    .graph-node.hypothesis { border-left: 4px solid var(--amber); cursor: pointer; }
+    .graph-node.hypothesis:hover, .graph-node.hypothesis.selected { background: #fffaf2; border-color: #d3a25d; }
+    .graph-node.evidence { border-left: 4px solid var(--blue); }
+    .graph-node.finding { border-left: 4px solid var(--green); }
+    .graph-node.scope { border-left: 4px solid #7656a8; }
+    .graph-node.running { box-shadow: 0 0 0 2px #f0d59e; }
+    .graph-node.pending { opacity: .55; }
+    .graph-node-top { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
+    .graph-node h3 { font-size: 13px; line-height: 1.4; margin: 0; }
+    .graph-node p { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 7px 0 0; }
+    .graph-meta { color: var(--muted); font-family: monospace; font-size: 10px; margin-top: 10px; }
+    .graph-arrow { color: #9aaba7; font-size: 17px; height: 13px; line-height: 13px; text-align: center; }
+    .graph-branches { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .graph-branches .graph-node { min-height: 115px; }
+    .graph-empty { border: 1px dashed #aabbb4; color: var(--muted); font-size: 12px; line-height: 1.55; padding: 18px; text-align: center; }
+    .graph-detail { min-height: 690px; }
+    .detail-stack { display: grid; gap: 13px; padding: 17px; }
+    .detail-block { border-bottom: 1px solid #edf1ee; padding-bottom: 13px; }
+    .detail-block:last-child { border-bottom: 0; padding-bottom: 0; }
+    .detail-block small { color: var(--muted); display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em; margin-bottom: 6px; text-transform: uppercase; }
+    .detail-block strong { display: block; font-size: 13px; line-height: 1.45; }
+    .detail-block p { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 5px 0 0; }
+    @keyframes nodeIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
     .canvas-panel { min-height: 610px; overflow: hidden; position: relative; }
     .canvas-head { align-items: center; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; padding: 17px 20px; }
     .canvas-head h2 { margin: 0; }
@@ -222,6 +267,8 @@
     @media (max-width: 1120px) {
       .layout-a { grid-template-columns: 235px minmax(0, 1fr); }
       .layout-a > .panel:last-child { grid-column: 1 / -1; }
+      .b-workspace { grid-template-columns: 260px minmax(0, 1fr); }
+      .b-workspace > .graph-detail { grid-column: 1 / -1; min-height: 0; }
       .layout-c { grid-template-columns: 1fr; }
       .sidebar-c { grid-template-columns: 1fr 1fr; }
     }
@@ -231,6 +278,10 @@
       .hero-row { align-items: start; flex-direction: column; }
       .hero-actions { justify-content: start; }
       .layout-a, .layout-b { grid-template-columns: 1fr; }
+      .b-workspace { grid-template-columns: 1fr; }
+      .b-workspace > .graph-detail { grid-column: auto; }
+      .chat-panel, .live-graph-panel, .graph-detail { min-height: 0; }
+      .graph-branches { grid-template-columns: 1fr; }
       .intake-grid { grid-template-columns: 1fr; }
       .layout-a > .panel:last-child { grid-column: auto; }
       .layout-b .canvas-panel { min-height: 0; }
@@ -269,6 +320,9 @@
       { id: "H3", title: "商品结构向低价倾斜", detail: "More low-price items were purchased", status: "open", confidence: 58, color: "amber" }
     ];
     const defaultQuestion = "为什么最近 7 天 GMV 下降了 18.4%？";
+    function initialGraph() {
+      return [{ id: "anomaly", kind: "anomaly", status: "observed", label: "异常 / GMV -18.4%", detail: "最近 7 天 vs 前一周 · 已支付订单金额", meta: "observed · source: orders.sqlite" }];
+    }
     let state = {
       screen: "intake",
       phase: "ready",
@@ -276,6 +330,8 @@
       fileName: "",
       selected: "H2",
       clarified: false,
+      messages: [],
+      graph: initialGraph(),
       events: ["等待开始调查"]
     };
 
@@ -315,6 +371,124 @@
       }[character]));
     }
 
+    function pushMessage(role, text) {
+      state.messages.push({ role, text });
+    }
+
+    function clearRunTimers() {
+      (window.__runTimers || []).forEach(timer => window.clearTimeout(timer));
+      window.__runTimers = [];
+    }
+
+    function addGraph(nodes) {
+      state.graph.push(...nodes);
+    }
+
+    function updateGraph(id, updates) {
+      const node = state.graph.find(item => item.id === id);
+      if (node) Object.assign(node, updates);
+    }
+
+    function startTimedSteps(steps) {
+      clearRunTimers();
+      window.__runTimers = steps.map(step => window.setTimeout(() => {
+        step.run();
+        render();
+      }, step.delay));
+    }
+
+    function beginInvestigation() {
+      state.phase = "running";
+      pushMessage("agent", "计划已确认。我会边执行边更新调查图；如果你改变范围，可以随时追问。\n\n现在先检查渠道、设备和结算漏斗。 ");
+      state.events.unshift("开始执行调查计划");
+      render();
+      startTimedSteps([
+        { delay: 420, run: true },
+        { delay: 1100, run: true },
+        { delay: 1780, run: true },
+        { delay: 2460, run: true }
+      ].map(step => ({ delay: step.delay, run: () => {
+        const index = [420, 1100, 1780, 2460].indexOf(step.delay);
+        if (index === 0) {
+          if (!state.graph.some(item => item.id === "h1")) addGraph([
+            { id: "h1", kind: "hypothesis", status: "testing", label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "pending evidence" },
+            { id: "h2", kind: "hypothesis", status: "testing", label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "pending evidence" },
+            { id: "h3", kind: "hypothesis", status: "testing", label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "pending evidence" }
+          ]);
+          ["h1", "h2", "h3"].forEach(id => updateGraph(id, { status: "testing", meta: "testing now" }));
+          state.events.unshift("已生成 3 个可证伪 Hypotheses");
+          pushMessage("agent", "我先提出 3 个假设。接下来每个假设都必须连到实际执行的 Evidence。 ");
+        }
+        if (index === 1) {
+          addGraph([{ id: "e1", kind: "evidence", status: "complete", label: "E1 / Android checkout → paid -31%", detail: "移动端结算漏斗在比较窗口显著下降，桌面端稳定。", meta: "query:funnel_07 · replayable" }]);
+          updateGraph("h2", { status: "supported", detail: "E1 支持 Android 结算转化下降", meta: "supported by E1" });
+          addGraph([{ id: "h2a", kind: "hypothesis", status: "open", label: "H2.1 / 支付渠道失败", detail: "新线索：需要支付错误日志才能继续判断", meta: "new branch from E1" }]);
+          state.selected = "h2";
+          state.events.unshift("E1 完成：H2 得到支持，并产生新分支 H2.1");
+          pushMessage("agent", "E1 支持 H2。我发现一个新线索：可能是支付渠道失败，但当前订单数据还不能证明，需要支付错误日志。 ");
+        }
+        if (index === 2) {
+          addGraph([{ id: "e2", kind: "evidence", status: "complete", label: "E2 / 渠道流量贡献不足", detail: "mobile_direct sessions 仅下降 4.2%，不足以解释 GMV 下跌。", meta: "query:channel_delta_03 · replayable" }]);
+          updateGraph("h1", { status: "weakened", detail: "E2 显示流量变化不是主要贡献项", meta: "weakened by E2" });
+          state.events.unshift("E2 完成：H1 被削弱");
+          pushMessage("agent", "E2 削弱了 H1。它仍保留在调查图中，但不会进入当前主要 Finding。 ");
+        }
+        if (index === 3) {
+          addGraph([{ id: "e3", kind: "evidence", status: "complete", label: "E3 / AOV +3.1%", detail: "客单价上升，低价商品结构变化不是主要解释。", meta: "query:aov_mix_11 · replayable" }, { id: "f1", kind: "finding", status: "complete", label: "F1 / Android 转化是主要贡献因素", detail: "当前证据支持贡献关系，但不能证明具体因果事件。", meta: "supported by E1 · qualified" }]);
+          updateGraph("h3", { status: "weakened", detail: "E3 方向与低价结构主因不一致", meta: "weakened by E3" });
+          state.phase = "complete";
+          state.events.unshift("调查完成：3 个 Evidence、1 个 Finding、1 个开放分支");
+          pushMessage("agent", "调查完成。当前最有证据支持的是 H2，但 H2.1 仍需支付错误日志验证。你可以继续追问或补充数据。 ");
+          notify("调查图已更新：Finding 已绑定 Evidence");
+        }
+      }})));
+    }
+
+    function sendChat(textOverride) {
+      const input = document.getElementById("chat-input");
+      const text = (textOverride || input?.value || "").trim();
+      if (!text) {
+        input?.focus();
+        return;
+      }
+      pushMessage("user", text);
+      if (input) input.value = "";
+
+      if (state.phase === "clarifying") {
+        state.phase = "plan_review";
+        state.events.unshift("用户补充了指标定义，生成调查计划");
+        pushMessage("agent", "收到。我会按“已支付订单金额、排除取消订单、对比前 7 天”处理。\n\n调查计划：渠道流量、设备转化、商品结构。确认后我开始执行。 ");
+        addGraph([
+          { id: "h1", kind: "hypothesis", status: "planned", label: "H1 / 渠道流量减少", detail: "验证渠道 sessions 是否能解释 GMV 变化", meta: "planned" },
+          { id: "h2", kind: "hypothesis", status: "planned", label: "H2 / Android 转化下降", detail: "验证 cart → paid 是否在设备维度恶化", meta: "planned" },
+          { id: "h3", kind: "hypothesis", status: "planned", label: "H3 / 商品结构变化", detail: "验证低价商品占比是否改变客单价", meta: "planned" }
+        ]);
+        render();
+        return;
+      }
+
+      if (state.phase === "complete") {
+        state.phase = "follow_up";
+        state.events.unshift("收到追问，创建新的调查范围");
+        addGraph([{ id: "scope-" + Date.now(), kind: "scope", status: "running", label: "追问 / " + text, detail: "在原调查基础上增加新的过滤条件或证据需求", meta: "follow-up running" }]);
+        pushMessage("agent", "收到追问。我会保留原调查结果，并在新的范围下追加 Evidence，不会覆盖已有证据。 ");
+        render();
+        window.setTimeout(() => {
+          const scope = state.graph.find(item => item.kind === "scope" && item.status === "running");
+          if (scope) Object.assign(scope, { status: "complete", meta: "scope confirmed" });
+          addGraph([{ id: "e-follow-up", kind: "evidence", status: "complete", label: "E8 / 追问范围 Evidence", detail: "新增范围下的分群结果已生成，可与原 Evidence 对比。", meta: "query:follow_up_01 · replayable" }]);
+          state.phase = "complete";
+          state.events.unshift("追问完成：新增 E8，原调查链路保留");
+          pushMessage("agent", "追问完成。新的 Evidence 已加入调查图，原来的 H1/H2/H3 和 F1 仍然可查看。 ");
+          render();
+        }, 760);
+        return;
+      }
+
+      pushMessage("agent", "我会先完成当前调查阶段，再处理这条追问。你也可以先确认当前调查计划。 ");
+      render();
+    }
+
     function action(action, id) {
       if (action === "start") {
         const input = document.getElementById("question-input");
@@ -325,28 +499,33 @@
           return;
         }
         state.screen = "workspace";
-        state.phase = "ready";
+        state.phase = "clarifying";
         state.question = question;
-        state.events = ["问题已提交，等待开始调查"];
+        state.messages = [
+          { role: "user", text: question },
+          { role: "agent", text: "在开始调查前，我需要确认 Metric 定义、对比窗口和数据范围。你可以直接回答，也可以继续追问。" }
+        ];
+        state.graph = initialGraph();
+        state.events = ["问题已提交，等待指标定义确认"];
         render();
-        notify("已创建 Investigation");
+        notify("Agent 正在澄清调查问题");
         return;
       }
-      if (action === "run") {
-        if (state.phase === "running") return;
-        state.phase = "running";
-        state.events.unshift("Agent 正在检查字段、时间窗口和维度贡献");
-        render();
-        window.setTimeout(() => {
-          state.phase = "complete";
-          state.events.unshift("已生成 3 个假设，完成 7 次只读证据调用");
-          render();
-          notify("调查完成：Finding 已绑定 Evidence");
-        }, 720);
+      if (action === "run" || action === "confirm-plan") {
+        if (state.phase === "plan_review") beginInvestigation();
+        return;
+      }
+      if (action === "send-chat") {
+        sendChat();
+        return;
+      }
+      if (action === "suggestion") {
+        sendChat(id);
         return;
       }
       if (action === "reset") {
-        state = { screen: "intake", phase: "ready", question: "", fileName: "", selected: "H2", clarified: false, events: ["等待开始调查"] };
+        clearRunTimers();
+        state = { screen: "intake", phase: "ready", question: "", fileName: "", selected: "H2", clarified: false, messages: [], graph: initialGraph(), events: ["等待开始调查"] };
         render();
         notify("已回到新的调查");
         return;
@@ -372,7 +551,7 @@
 
     function bindActions() {
       document.querySelectorAll("[data-action]").forEach(element => {
-        element.addEventListener("click", () => action(element.dataset.action, element.dataset.id));
+        element.addEventListener("click", () => action(element.dataset.action, element.dataset.id || element.dataset.text));
       });
       const fileInput = document.getElementById("data-file");
       if (fileInput) {
@@ -409,7 +588,7 @@
                 <label class="file-label" for="data-file">＋ 选择 CSV / Excel / SQLite 文件</label>
                 <input id="data-file" class="file-input" type="file" accept=".csv,.xlsx,.xls,.sqlite,.db">
               </div>
-              <div class="intake-actions"><p class="tiny">下一步会进入指标定义确认</p><button class="btn btn-primary" data-action="start">进入调查工作台 →</button></div>
+              <div class="intake-actions"><p class="tiny">下一步先和 Agent 对话确认问题</p><button class="btn btn-primary" data-action="start">提交问题，开始对话 →</button></div>
             </section>
             <aside class="intake-panel">
               <p class="eyebrow">What the Agent will do</p>
@@ -431,6 +610,8 @@
     function sharedHero() {
       const running = state.phase === "running";
       const complete = state.phase === "complete";
+      const planReady = state.phase === "plan_review";
+      const followUp = state.phase === "follow_up";
       return `
         <div class="hero-row">
           <div>
@@ -441,7 +622,7 @@
           <div class="hero-actions">
             <button class="btn btn-secondary" data-action="clarify">⌁ 指标定义${state.clarified ? "已确认" : "待确认"}</button>
             <button class="btn btn-secondary" data-action="reset">↺ 重置</button>
-            <button class="btn btn-primary" data-action="run" ${running ? "disabled" : ""}>${running ? "◌ 调查中" : complete ? "✓ 重新调查" : "▶ 开始调查"}</button>
+            <button class="btn btn-primary" data-action="${planReady ? "confirm-plan" : "run"}" ${(running || followUp || state.phase === "clarifying") ? "disabled" : ""}>${running ? "◌ 调查中" : followUp ? "◌ 追问中" : planReady ? "✓ 确认计划" : complete ? "✓ 已完成" : state.phase === "clarifying" ? "等待澄清" : "▶ 开始调查"}</button>
           </div>
         </div>
         ${state.clarified ? '<div class="clarify-box"><strong>待用户确认：</strong>本次 Metric 暂按“已支付订单金额（含折扣，不含取消订单）”计算。确认后，Agent 才会把不同表的金额字段纳入同一调查。</div>' : ""}
@@ -460,8 +641,16 @@
     }
 
     function stateLine() {
-      const text = state.phase === "ready" ? "调查尚未执行 · 先确认 Metric 定义，再让 Agent 选择证据工具" : state.phase === "running" ? "执行中 · 正在检查字段、拆解维度贡献并保存每次工具调用" : "调查完成 · 3 个 Hypotheses 已排序，7 个 Evidence 已保存，可重放";
-      return `<div class="state-line ${state.phase}"><span>${state.phase === "complete" ? "✓" : state.phase === "running" ? "◌" : "○"}</span>${text}</div>`;
+      const states = {
+        clarifying: ["○", "等待澄清 · Agent 正在确认指标定义和调查范围"],
+        plan_review: ["◌", "计划待确认 · Hypotheses 已生成，确认后开始执行"],
+        running: ["◌", "执行中 · 调查图会随着 Hypotheses 和 Evidence 追加而变化"],
+        follow_up: ["◌", "追问执行中 · 原调查链路保留，正在追加新的 Evidence 分支"],
+        complete: ["✓", "调查完成 · Finding 已绑定 Evidence，可继续追问"],
+        ready: ["○", "调查尚未执行 · 先确认 Metric 定义，再让 Agent 选择证据工具"]
+      };
+      const [icon, text] = states[state.phase] || states.ready;
+      return `<div class="state-line ${state.phase}"><span>${icon}</span>${text}</div>`;
     }
 
     function hypothesisList() {
@@ -519,8 +708,41 @@
       return `${sharedHero()}${metricStrip()}${stateLine()}<div class="layout-a"><section class="panel"><div class="panel-head"><h2>Hypotheses</h2><span class="panel-note">3 candidates</span></div><div class="hypothesis-list">${hypothesisList()}</div></section><section class="panel"><div class="panel-head"><h2>Evidence Ledger</h2><span class="panel-note">click a hypothesis to filter</span></div><div class="panel-body">${evidenceCards()}</div></section>${findingPanel()}</div>`;
     }
 
+    function graphStatus(status) {
+      const map = { observed: ["tag-blue", "observed"], planned: ["tag-amber", "planned"], testing: ["tag-amber", "running"], running: ["tag-amber", "running"], supported: ["tag-green", "supported"], complete: ["tag-green", "complete"], weakened: ["tag-coral", "weakened"], open: ["tag-amber", "open"], clarifying: ["tag-blue", "clarifying"], plan_review: ["tag-amber", "plan ready"], follow_up: ["tag-amber", "follow-up"] };
+      const [color, label] = map[status] || ["tag-blue", status];
+      return `<span class="tag ${color}">${label}</span>`;
+    }
+
+    function graphNode(node) {
+      const selected = state.selected && state.selected.toLowerCase() === node.id.toLowerCase();
+      return `<article class="graph-node ${node.kind} ${node.status} ${selected ? "selected" : ""}" data-action="${node.kind === "hypothesis" ? "hypothesis" : "trace"}" data-id="${node.id}">
+        <div class="graph-node-top"><h3>${escapeHtml(node.label)}</h3>${graphStatus(node.status)}</div>
+        <p>${escapeHtml(node.detail)}</p>
+        <div class="graph-meta">${escapeHtml(node.meta)}</div>
+      </article>`;
+    }
+
+    function renderLiveGraph() {
+      const anomaly = state.graph.find(node => node.kind === "anomaly");
+      const hypotheses = state.graph.filter(node => node.kind === "hypothesis");
+      const downstream = state.graph.filter(node => ["scope", "evidence", "finding"].includes(node.kind));
+      return `<div class="live-graph">${graphNode(anomaly)}<div class="graph-arrow">↓ Agent proposes and tests competing explanations</div>${hypotheses.length ? `<div class="graph-branches">${hypotheses.map(graphNode).join("")}</div>` : `<div class="graph-empty">${state.phase === "clarifying" ? "等待用户确认指标定义，暂不生成假设。" : "确认调查计划后，Hypotheses 会在这里出现。"}</div>`}${downstream.length ? `<div class="graph-arrow">↓ new Evidence and findings append here</div>${downstream.map(node => graphNode(node)).join('<div class="graph-arrow">↓</div>')}` : ""}</div>`;
+    }
+
+    function renderChatPanel() {
+      const suggestions = state.phase === "clarifying" ? `<button class="suggestion" data-action="suggestion" data-id="GMV = 已支付订单金额；排除取消订单；对比前 7 天">确认：已支付金额，排除取消订单，对比前 7 天</button>` : state.phase === "plan_review" ? `<button class="btn btn-primary" data-action="confirm-plan" style="width:100%">✓ 确认计划，开始调查</button>` : state.phase === "complete" ? `<button class="suggestion" data-action="suggestion" data-id="只看 Android 端，并检查支付失败原因">只看 Android，并检查支付失败原因</button><button class="suggestion" data-action="suggestion" data-id="为什么不是渠道流量？">为什么不是渠道流量？</button>` : `<span class="tiny">调查事件会实时写入中央画布</span>`;
+      return `<section class="panel chat-panel"><div class="panel-head"><div><p class="eyebrow" style="margin-bottom:4px">Chat-first investigation</p><h2>和 Agent 一起调查</h2></div>${graphStatus(state.phase === "follow_up" ? "running" : state.phase)}</div><div class="chat-thread">${state.messages.map(message => `<div class="chat-message ${message.role}"><span class="chat-avatar">${message.role === "user" ? "你" : "AI"}</span><div class="chat-bubble"><strong>${message.role === "user" ? "User" : "Agent"}</strong>${escapeHtml(message.text).replace(/\n/g, "<br>")}</div></div>`).join("")}</div><div class="chat-suggestions">${suggestions}</div><div class="chat-compose"><textarea id="chat-input" aria-label="继续追问" placeholder="继续追问，例如：只看 Android 端，或补充指标定义"></textarea><div class="chat-compose-footer"><span class="tiny">追问会保留原证据，追加新分支</span><button class="btn btn-secondary" data-action="send-chat">发送 ↗</button></div></div></section>`;
+    }
+
+    function renderGraphDetail() {
+      const selectedId = state.selected && state.selected.toLowerCase();
+      const selected = state.graph.find(node => node.id.toLowerCase() === selectedId) || state.graph[state.graph.length - 1];
+      return `<section class="panel graph-detail"><div class="panel-head"><h2>Current node</h2><span class="panel-note">live state</span></div><div class="detail-stack"><div class="detail-block"><small>Selected</small><strong>${escapeHtml(selected?.label || "等待调查")}</strong><p>${escapeHtml(selected?.detail || "先在聊天区确认问题和调查计划。")}</p></div><div class="detail-block"><small>Status</small>${selected ? graphStatus(selected.status) : ""}<p>${escapeHtml(selected?.meta || "no evidence yet")}</p></div><div class="detail-block"><small>Investigation contract</small><strong>每个 Finding 都必须链接到已执行 Evidence</strong><p>当前画布只展示可验证状态，不展示模型内部思考。</p></div><div class="detail-block"><small>Next move</small><strong>${state.phase === "clarifying" ? "回答 Agent 的澄清问题" : state.phase === "plan_review" ? "确认调查计划" : state.phase === "running" ? "等待 Evidence 追加" : "继续追问或补充数据"}</strong></div></div></section>`;
+    }
+
     function renderB() {
-      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="layout-b"><section class="panel canvas-panel"><div class="canvas-head"><div><p class="eyebrow">Investigation graph</p><h2>从异常到可支持的 Finding</h2></div><span class="tag tag-blue">stateful trace</span></div><div class="canvas"><div class="flow-node anomaly"><div class="flow-label">Observed anomaly</div><strong>GMV -18.4% vs previous 7 days</strong><p>这是一项需要调查的观察，不预设它是数据错误或业务根因。</p></div><div class="flow-arrow">↓</div><div class="branch-row"><div class="flow-node hypothesis ${state.selected === "H1" ? "active" : ""}" data-action="hypothesis" data-id="H1"><div class="flow-label">H1 / weakened</div><strong>渠道流量减少</strong><p>E2：贡献不足以解释总变化。</p></div><div class="flow-node hypothesis ${state.selected === "H2" ? "active" : ""}" data-action="hypothesis" data-id="H2"><div class="flow-label">H2 / supported</div><strong>移动端结算转化下降</strong><p>E1：Android checkout → paid -31%。</p></div></div><div class="flow-arrow">↓</div><div class="flow-node evidence"><div class="flow-label">Executed evidence</div><strong>E1 · funnel_daily / query:funnel_07</strong><p>Evidence 可重放，结果包含受影响分群、时间窗口和比较值。</p><div style="margin-top:10px"><button class="trace-link" data-action="trace">打开执行详情 →</button></div></div><div class="flow-arrow">↓</div><div class="flow-node finding"><div class="flow-label">Finding / qualified</div><strong>移动端支付转化下降是当前最有证据支持的贡献因素。</strong><p>不声称已证明具体因果事件；下一步需要支付服务日志或发布记录。</p></div></div></section><aside class="side-stack"><section class="panel"><div class="panel-head"><h2>Decision log</h2><span class="panel-note">state changes</span></div><div class="panel-body"><div class="decision-list"><div class="decision-row"><span class="decision-icon support">✓</span><div><strong>保留 H2</strong><p>E1 支持 Android checkout 转化下降。</p></div></div><div class="decision-row"><span class="decision-icon reject">×</span><div><strong>削弱 H1</strong><p>E2 显示流量贡献不足。</p></div></div><div class="decision-row"><span class="decision-icon open">?</span><div><strong>保留 H3 为开放</strong><p>AOV 方向相反，需要更多商品组合证据。</p></div></div></div></div></section><section class="panel"><div class="panel-head"><h2>Evidence contract</h2><span class="panel-note">replay metadata</span></div><div class="panel-body"><table class="trace-table"><tr><td>Input hash</td><td class="mono">sha256:4c9f...b81</td></tr><tr><td>Tool calls</td><td>7 executed / 0 failed</td></tr><tr><td>Replay</td><td><span class="tag tag-green">ready</span></td></tr><tr><td>Claim limit</td><td>contribution ≠ causation</td></tr></table></div></section></aside></div>`;
+      return `${sharedHero()}${metricStrip()}${stateLine()}<div class="b-workspace">${renderChatPanel()}<section class="panel live-graph-panel"><div class="canvas-head"><div><p class="eyebrow">Live Investigation Canvas</p><h2>异常到 Finding 的实时路径</h2></div><span class="tag tag-blue">event-driven</span></div>${renderLiveGraph()}</section>${renderGraphDetail()}</div>`;
     }
 
     function renderC() {
