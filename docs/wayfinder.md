@@ -25,6 +25,9 @@ Produce a handoff-ready product specification, technical architecture, and imple
 - See [Benchmark Data and Case Research](research/benchmark-data-and-cases.md).
 - The approved [viability protocol](viability-protocol.md) compares DataDetective with the same-model general-purpose file-analysis workflow using 24 synthetic cases and 6 UCI holdouts.
 - The project proceeds only if all hard gates pass and DataDetective improves at least one primary metric by 15 percentage points without a material regression.
+- The prototype selected Variant B, the Investigation Canvas, as the primary interaction: anomaly -> Hypotheses -> Evidence -> qualified Finding.
+- Variant A becomes the evidence-detail surface and Variant C becomes the durable business-facing report view.
+- The primary prototype source remains on the [prototype/investigation-experience branch](https://github.com/asfgas2fsd34t/datadetective/tree/prototype/investigation-experience/prototypes).
 
 ## Not yet specified
 
